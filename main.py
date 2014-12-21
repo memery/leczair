@@ -1,7 +1,8 @@
-import json
+import json, logging
 
 from state import State, from_dict
 import irc, network
+
 
 
 def load_settings():
@@ -14,6 +15,9 @@ def init():
     state.settings = load_settings()
     sock = network.BufferedSocket(state.settings.irc.host,
                                   state.settings.irc.port)
+
+    # set up logging
+    logging.basicConfig(level=logging.DEBUG)
 
     irc.init(sock, state)
     while True:
