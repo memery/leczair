@@ -1,5 +1,6 @@
 
 from irc.parser import Message, parse_privmsg
+from irc.render import to_raw
 
 def init(sock, state):
     irc_settings = state.settings.irc
@@ -29,7 +30,6 @@ def get_message(sock, state):
     return parse_privmsg(message)
 
 
-def send_message(sock, msg):
-    # socket.send(to_raw_message(internal_message))
-    pass
+def send_message(sock, message):
+    sock.write(to_raw(message))
 
