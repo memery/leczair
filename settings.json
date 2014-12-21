@@ -1,0 +1,10 @@
+{
+  "irc": {
+    "host": "localhost",
+    "port": 6667,
+    "nick": "phi-beta",
+    "channel": "#leczair"
+  }
+}
+
+
