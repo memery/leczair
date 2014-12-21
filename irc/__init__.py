@@ -1,6 +1,8 @@
+import state
 
-from irc.parser import Message, parse_privmsg
-from irc.render import to_raw
+from .parser import Message, parse_privmsg
+from .render import to_raw
+
 
 def init(sock, state):
     irc_settings = state.settings.irc
@@ -9,7 +11,7 @@ def init(sock, state):
     state.irc.joined = False
 
 
-def manage(raw_msg, state):
+def manage(message, state):
     if message.command == 'PING':
         return Message(command='PONG', arguments=message.arguments)
     elif message.command == '403':
@@ -22,14 +24,18 @@ def get_message(sock, state):
     if not raw_message:
         return None
 
-    response = manage(raw_message, state)
+    message = Message(raw_message=raw_message)
+
+    response = manage(message, state)
     if response:
         send_message(sock, response)
         return None
 
-    return parse_privmsg(message)
+    if message.command == 'PRIVMSG':
+        return parse_privmsg(message)
+    else:
+        return None
 
 
 def send_message(sock, message):
     sock.write(to_raw(message))
-

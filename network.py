@@ -1,8 +1,13 @@
 import socket
 from ssl import wrap_socket
+from logging import getLogger
+from contextlib import suppress
 
 
-class BufferedSocket(object):
+logger = getLogger(__name__)
+
+
+class BufferedSocket:
 
     """
     A buffered SSL agnostic socket object. The read method will
@@ -35,11 +40,16 @@ class BufferedSocket(object):
 
         try:
             byteline, self.buffer = self.buffer.split(b'\r\n', 1)
-            return byteline.decode('utf-8')
+            read_data = byteline.decode('utf-8')
+
+            logger.debug('Read: %s', read_data)
+
+            return read_data
         except ValueError:
             more = self.sock.read if self.ssl else self.sock.recv
-            with ignored(socket.timeout):
+            with suppress(socket.timeout):
                 self.buffer += more(4096)
+
             return None
 
 
@@ -50,5 +60,7 @@ class BufferedSocket(object):
         out to the socket.
 
         """
+
+        logger.debug('Wrote: %s', text)
 
         self.sock.send(bytes(text + '\n', 'utf-8'))
