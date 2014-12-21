@@ -6,6 +6,7 @@ user_pattern = re.compile(r':([^ ]+) ')
 command_pattern = re.compile(r'([^ ]+)')
 argument_pattern = re.compile(r' ([^:][^ ]*)')
 last_arg_pattern = re.compile(r' :(.*)')
+nick_pattern = re.compile(r'~?([^!]+)!')
 
 
 
@@ -33,6 +34,11 @@ def parse_privmsg(message):
 
     """
 
+    if message.command == 'PRIVMSG':
+        message.recipient, message.text = message.arguments
+        message.author = nick_pattern.match(message.user).group(1)
+    else:
+        raise TypeError('unsupported argument to parse_privmsg: not a PRIVMSG')
     return message
 
 
