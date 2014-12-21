@@ -14,7 +14,11 @@ logger = getLogger(__name__)
 def init(sock, state):
     irc_settings = state.settings.irc
     send_message(sock, Message(command='NICK', arguments=[irc_settings.nick]))
-    send_message(sock, Message(command='USER', arguments=[irc_settings.nick, '0', '*', 'IRC bot {}'.format(irc_settings.nick)]))
+
+    user_arguments = [irc_settings.nick, '0', '*',
+                     'IRC bot {}'.format(irc_settings.nick)]
+    send_message(sock, Message(command='USER', arguments=user_arguments))
+
     state.irc.nick = irc_settings.nick
     state.irc.joined = False
 
@@ -27,15 +31,21 @@ def manage(message, state):
         state.settings.irc.channel = None
     elif message.command == '433':
         def new_nick_proposal(nick):
-            nick = nick[:min(len(nick), 6)] # determine how much to shave off to make room for random chars
-            return '{}_{}'.format(nick, ''.join(random.choice(string.ascii_lowercase + string.digits) for x in range(2)))
+            # determine how much to shave off to make room for random chars
+            nick = nick[:min(len(nick), 6)]
+
+            random_choices = string.ascii_lowercase + string.digits
+            random_chars = ''.join(random.choice(random_choices)
+                                   for x in range(2))
+
+            return '{}_{}'.format(nick, random_chars)
 
         nick = state.settings.irc.nick
 
         logger.warning('Nick %s is already in use', nick)
 
         new_nick = new_nick_proposal(nick)
-        state.settings.irc.nick = new_nick
+        state.irc.nick = new_nick
 
         return Message(command='NICK', arguments=[new_nick])
 
@@ -47,7 +57,8 @@ def get_message(sock, state):
     raw_message = sock.read()
     if not raw_message:
         if state.settings.irc.channel and not state.irc.joined:
-            send_message(sock, Message(command='JOIN', arguments=[state.settings.irc.channel]))
+            send_message(sock, Message(command='JOIN',
+                                       arguments=[state.settings.irc.channel]))
         return None
 
     message = Message(raw_message=raw_message)
