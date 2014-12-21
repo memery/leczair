@@ -15,4 +15,20 @@ class State:
         return new
 
 
+def from_dict(d):
+
+    """
+    Create a State object recursively from a dict.
+
+    """
+
+    state = State()
+
+    for k, v in d.items():
+        if isinstance(v, dict):
+            v = from_dict(v)
+        state.__setattr__(k, v)
+
+    return state
+
 
