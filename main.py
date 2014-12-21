@@ -9,11 +9,11 @@ logger = logging.getLogger(__name__)
 
 def log_exceptions(f):
     def new_f(*args, **kwargs):
-        try:
-            return f(*args, **kwargs)
-        except Exception as e:
-            logger.error(e)
-            return f(*args, **kwargs)
+        while True:
+            try:
+                return f(*args, **kwargs)
+            except Exception as e:
+                logger.error(e)
 
     return new_f
 
