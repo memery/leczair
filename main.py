@@ -1,14 +1,17 @@
 
-import network
-import time
+import json
+from state import State, from_dict
 
+
+def load_settings():
+    with open('settings.json', 'r') as conf:
+        return from_dict(json.load(conf))
 
 def init():
-    sock = network.BufferedSocket('127.0.0.1', 6667)
-    sock.write('NICK phi-beta')
-    sock.write('USER phi-beta 0 * :real phi-beta')
-    time.sleep(2)
-    sock.write('JOIN #leczair')
+    state = State()
+    state.settings = load_settings() 
+    
+    load_settings(state.settings)
 
 
 if __name__ == '__main__':
