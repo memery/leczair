@@ -14,7 +14,8 @@ def init():
     state = State()
     state.settings = load_settings()
     sock = network.BufferedSocket(state.settings.irc.host,
-                                  state.settings.irc.port)
+                                  state.settings.irc.port,
+                                  ssl=state.settings.irc.ssl)
 
     # set up logging
     logging.basicConfig(level=logging.DEBUG)

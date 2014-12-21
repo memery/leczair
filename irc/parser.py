@@ -51,6 +51,11 @@ def parse_privmsg(message):
     return message
 
 
+def get_nick(message):
+    m = nick_pattern.match(message.user)
+    return m.group(1) if m else None
+
+
 def basic_parse(raw_message):
 
     """

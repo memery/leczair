@@ -1,8 +1,9 @@
 {
   "irc": {
-    "host": "localhost",
-    "port": 6667,
-    "nick": "phi-beta",
+    "host": "irc.gfu.se",
+    "port": 6697,
+    "ssl": true,
+    "nick": "phi-gamma",
     "channel": "#leczair"
   }
 }
