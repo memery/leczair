@@ -16,14 +16,23 @@ class Message:
     An internal message data structure, with fields such
     as msg.user, msg.command and so on.
 
+    The constructor takes either a raw IRC network message
+    or a command (with optional arguments.)
+
     """
 
-    def __init__(self, raw_message):
-        self.user, self.command, args, last_arg = \
-            basic_parse(raw_message)
+    def __init__(self, raw_message=None, command=None, arguments=None):
+        if raw_message:
+            self.user, self.command, args, last_arg = \
+                basic_parse(raw_message)
         
-        self.arguments = args + [last_arg]
-
+            self.arguments = args + [last_arg]
+        elif command:
+            self.command = command
+            self.arguments = arguments
+        else:
+            raise ValueError('Message.__init__ given neither raw_message nor command')
+        
 
 def parse_privmsg(message):
     
