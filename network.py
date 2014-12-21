@@ -5,24 +5,25 @@ from ssl import wrap_socket
 class BufferedSocket(object):
 
     """
-    bufsock
+    A buffered SSL agnostic socket object. The read method will
+    either return a complete received line (without crlf) or, if
+    no such line exists, try to get more data from the backing
+    socket and then return None.
 
     """
 
-    def __init__(self, host, port, ssl=False, sock=None):
-        if not sock:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((host, port))
+    def __init__(self, host, port, ssl=False):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.connect((host, port))
 
-            sock.settimeout(1)
+        self.sock.settimeout(1)
 
         if ssl:
-            sock = wrap_socket(sock)
-
-        self.sock = sock
+            self.sock = wrap_socket(self.sock)
 
         self.ssl = ssl
         self.buffer = b''
+
 
     def read(self):
 
@@ -36,9 +37,11 @@ class BufferedSocket(object):
             byteline, self.buffer = self.buffer.split(b'\r\n', 1)
             return byteline.decode('utf-8')
         except ValueError:
+            more = self.sock.read if self.ssl else self.sock.recv
             with ignored(socket.timeout):
-                self.buffer += (self.sock.read(4096)
-                                if self.ssl else self.sock.recv(4096))
+                self.buffer += more(4096)
+            return None
+
 
     def write(self, text):
 

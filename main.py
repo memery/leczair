@@ -10,8 +10,6 @@ def load_settings():
 def init():
     state = State()
     state.settings = load_settings() 
-    
-    load_settings(state.settings)
 
 
 if __name__ == '__main__':

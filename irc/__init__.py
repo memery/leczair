@@ -1,29 +1,32 @@
 
+from irc.parser import Message, parse_privmsg
 
 def init(sock, state):
     irc_settings = state.settings.irc
-    sock.write('NICK {}'.format(irc_settings.nick))
-    sock.write('USER {0} 0 * :IRC bot {0}'.format(irc_settings.nick))
+    send_message(sock, Message(command='NICK', arguments=[irc_settings.nick]))
+    send_message(sock, Message(command='USER', arguments=[irc_settings.nick, '0', '*', 'IRC bot {}'.format(irc_settings.nick)]))
     state.irc.joined = False
 
 
 def manage(raw_msg, state):
     if message.command == 'PING':
-        # return PONG message
-        pass
+        return Message(command='PONG', arguments=message.arguments)
     elif message.command == '403':
         # Channel doesn't exist, stop trying to join
         state.settings.irc.channel = None
 
 
-def get_message(sock):
-    # raw_message = sock.get()
-    # if response = manage(raw_message)
-    #     send_message(response)
-    #     return None
-    # else:
-    #     return to_internal_message(raw_message)
-    pass
+def get_message(sock, state):
+    raw_message = sock.read()
+    if not raw_message:
+        return None
+
+    response = manage(raw_message, state)
+    if response:
+        send_message(sock, response)
+        return None
+
+    return parse_privmsg(message)
 
 
 def send_message(sock, msg):
