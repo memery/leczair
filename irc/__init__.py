@@ -1,7 +1,14 @@
+import random, string
+
+from logging import getLogger
+
 import state
 
 from .parser import Message, parse_privmsg, get_nick
 from .render import to_raw
+
+
+logger = getLogger(__name__)
 
 
 def init(sock, state):
@@ -18,6 +25,20 @@ def manage(message, state):
     elif message.command == '403':
         # Channel doesn't exist, stop trying to join
         state.settings.irc.channel = None
+    elif message.command == '433':
+        def new_nick_proposal(nick):
+            nick = nick[:min(len(nick), 6)] # determine how much to shave off to make room for random chars
+            return '{}_{}'.format(nick, ''.join(random.choice(string.ascii_lowercase + string.digits) for x in range(2)))
+
+        nick = state.settings.irc.nick
+
+        logger.warning('Nick %s is already in use', nick)
+
+        new_nick = new_nick_proposal(nick)
+        state.settings.irc.nick = new_nick
+
+        return Message(command='NICK', arguments=[new_nick])
+
     elif message.command == 'JOIN' and get_nick(message) == state.irc.nick:
         state.irc.joined = True
 
