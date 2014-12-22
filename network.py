@@ -1,4 +1,5 @@
 import socket
+
 from ssl import wrap_socket
 from logging import getLogger
 from contextlib import suppress
@@ -33,8 +34,8 @@ class BufferedSocket:
     def read(self):
 
         """
-        Tries to return a line from the buffer. If none exists, it reads in
-        ome more to the buffer and returns None.
+        Tries to return a line from the buffer. If none exists,
+        it reads in one more to the buffer and returns None.
 
         """
 
@@ -56,8 +57,8 @@ class BufferedSocket:
     def write(self, text):
 
         """
-        Accepts a a string object as text, encodes it as utf-8 and  puts it
-        out to the socket.
+        Accepts a a string object as text, encodes it as utf-8 and
+        puts it out to the socket.
 
         """
 

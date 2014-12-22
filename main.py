@@ -1,8 +1,12 @@
-import json, logging
+import json
+import logging
+
 from contextlib import contextmanager
 
-from state import State, from_dict
-import irc, network
+from state import State, from_dict, to_dict
+
+import irc
+import network
 
 
 logger = logging.getLogger(__name__)
@@ -17,27 +21,45 @@ def log_exceptions():
         logger.error(e)
 
 
+@contextmanager
+def maintain_connection(state):
+    class SocketNotCreatedError(Exception):
+        pass
+
+    try:
+        if not state.sock:
+            raise SocketNotCreatedError('fan ta dig')
+
+        yield state.sock
+    except (BrokenPipeError, ConnectionResetError, SocketNotCreatedError) as e:
+        print(e)
+        state.sock = create_irc_socket(state)
+        irc.init(state.sock, state)
+        yield state.sock
+
+
 def load_settings():
     with open('settings.json', 'r') as conf:
         return from_dict(json.load(conf))
+
+
+def create_irc_socket(state):
+    args = [state.settings.irc.host, state.settings.irc.port]
+    kwargs = {'ssl': state.settings.irc.ssl}
+    return network.BufferedSocket(*args, **kwargs)
 
 
 def init():
     # set up logging
     logging.basicConfig(level=logging.DEBUG)
 
-    with log_exceptions():
-        state = State()
-        state.settings = load_settings()
-        sock = network.BufferedSocket(state.settings.irc.host,
-                                      state.settings.irc.port,
-                                      ssl=state.settings.irc.ssl)
+    state = State()
+    state.settings = load_settings()
+    state.sock = None
 
-        irc.init(sock, state)
-
-        while True:
-            with log_exceptions():
-                irc.get_message(sock, state)
+    while True:
+        with log_exceptions(), maintain_connection(state) as sock:
+            irc.get_message(sock, state)
 
 
 if __name__ == '__main__':
