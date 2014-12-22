@@ -28,11 +28,10 @@ def maintain_connection(state):
 
     try:
         if not state.sock:
-            raise SocketNotCreatedError('fan ta dig')
+            raise SocketNotCreatedError
 
         yield state.sock
-    except (BrokenPipeError, ConnectionResetError, SocketNotCreatedError) as e:
-        print(e)
+    except (BrokenPipeError, ConnectionResetError, SocketNotCreatedError):
         state.sock = create_irc_socket(state)
         irc.init(state.sock, state)
         yield state.sock
