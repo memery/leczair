@@ -21,6 +21,7 @@ def init(sock, state):
 
     state.irc.nick = irc_settings.nick
     state.irc.joined = False
+    state.irc.registered = False
 
 
 def manage(message, state):
@@ -48,7 +49,9 @@ def manage(message, state):
         state.irc.nick = new_nick
 
         return Message(command='NICK', arguments=[new_nick])
-
+    elif message.command == '001':
+        state.irc.nick = message.arguments[0]
+        state.irc.registered = True
     elif message.command == 'JOIN' and get_nick(message) == state.irc.nick:
         state.irc.joined = True
 
@@ -56,7 +59,8 @@ def manage(message, state):
 def get_message(sock, state):
     raw_message = sock.read()
     if not raw_message:
-        if state.settings.irc.channel and not state.irc.joined:
+        if state.settings.irc.channel and not state.irc.joined \
+           and state.irc.registered:
             send_message(sock, Message(command='JOIN',
                                        arguments=[state.settings.irc.channel]))
         return None
