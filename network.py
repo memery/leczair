@@ -18,16 +18,16 @@ class BufferedSocket:
 
     """
 
-    def __init__(self, host, port, ssl=False):
+    def __init__(self, connection):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((host, port))
+        self.sock.connect((connection.host, connection.port))
 
         self.sock.settimeout(1)
 
-        if ssl:
+        if connection.ssl:
             self.sock = wrap_socket(self.sock)
 
-        self.ssl = ssl
+        self.ssl = connection.ssl
         self.buffer = b''
 
 

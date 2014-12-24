@@ -8,10 +8,6 @@ from .serialisation import Message, parse_privmsg, get_nick, to_raw
 logger = getLogger(__name__)
 
 
-def create_socket(irc):
-    return network.BufferedSocket(irc.host, irc.port, ssl=irc.ssl)
-
-
 def hello(sock, settings, state):
     
     """
