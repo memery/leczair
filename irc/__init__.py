@@ -1,8 +1,8 @@
 import random, string
 from logging import getLogger
-from underscore import id
+from extrafunctools import identity
 import network
-from .marshalling import Message, parse_privmsg, get_nick, to_raw
+from .serialisation import Message, parse_privmsg, get_nick, to_raw
 
 
 logger = getLogger(__name__)
@@ -85,7 +85,7 @@ def get_message(sock, settings, state):
         send_message(sock, response)
         return None
 
-    amend = parse_privmsg if message.command == 'PRIVMSG' else id
+    amend = parse_privmsg if message.command == 'PRIVMSG' else identity
     return amend(message)
 
 
