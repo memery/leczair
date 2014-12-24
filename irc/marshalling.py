@@ -45,15 +45,34 @@ def parse_privmsg(message):
 
     if message.command == 'PRIVMSG':
         message.recipient, message.text = message.arguments
-        message.author = nick_pattern.match(message.user).group(1)
+        message.author = get_nick(message)
     else:
         raise TypeError('unsupported argument to parse_privmsg: not a PRIVMSG')
     return message
 
 
 def get_nick(message):
+
+    """
+    Gets the nick part of the user mask in a message, if applicable.
+    Returns None otherwise.
+
+    """
+
     m = nick_pattern.match(message.user)
     return m.group(1) if m else None
+
+
+def to_raw(message):
+
+    """
+    Serialises an outbound message to a string the server would like
+    to have.
+    
+    """
+
+    *args, last_arg = message.arguments
+    return '{} {} :{}'.format(message.command, ' '.join(args), last_arg)
 
 
 def basic_parse(raw_message):

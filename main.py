@@ -34,8 +34,8 @@ def run_bot(state):
         except (ConnectionAbortedError, ConnectionRefusedError) as e:
             logger.error('Connection refused by the server, quitting...')
             return
-        #except Exception as e:
-        #    logger.error(e)
+        except Exception as e:
+            logger.error(e)
 
 
 if __name__ == '__main__':

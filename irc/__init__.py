@@ -2,8 +2,7 @@ import random, string
 from logging import getLogger
 from underscore import id
 import network
-from .parser import Message, parse_privmsg, get_nick
-from .render import to_raw
+from .marshalling import Message, parse_privmsg, get_nick, to_raw
 
 
 logger = getLogger(__name__)
