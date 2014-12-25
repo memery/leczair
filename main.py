@@ -46,7 +46,7 @@ def run_bot(state):
             logger.error('Connection refused by the server, quitting...')
             return
         except Exception as e:
-            traceback.print_exc(3, LoggerFileWrapper(logger.error))
+            logger.exception(e)
 
 
 if __name__ == '__main__':
