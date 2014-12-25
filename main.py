@@ -1,6 +1,7 @@
 import json
 import logging
 
+import traceback
 from contextlib import contextmanager
 from time import sleep
 
@@ -11,6 +12,16 @@ import network
 
 
 logger = logging.getLogger(__name__)
+
+
+class LoggerFileWrapper:
+    def __init__(self, logging_fn):
+        self.logging_fn = logging_fn
+
+    def write(self, string):
+        for line in string.splitlines():
+            if line:
+                self.logging_fn(line)
 
 
 def load_settings():
@@ -35,7 +46,7 @@ def run_bot(state):
             logger.error('Connection refused by the server, quitting...')
             return
         except Exception as e:
-            logger.error(e)
+            traceback.print_exc(3, LoggerFileWrapper(logger.error))
 
 
 if __name__ == '__main__':
