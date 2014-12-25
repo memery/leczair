@@ -1,7 +1,6 @@
 import json
 import logging
 
-import traceback
 from contextlib import contextmanager
 from time import sleep
 
@@ -13,16 +12,6 @@ import behaviour
 
 
 logger = logging.getLogger(__name__)
-
-
-class LoggerFileWrapper:
-    def __init__(self, logging_fn):
-        self.logging_fn = logging_fn
-
-    def write(self, string):
-        for line in string.splitlines():
-            if line:
-                self.logging_fn(line)
 
 
 def load_settings():
