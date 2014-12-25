@@ -2,7 +2,7 @@ import random, string
 from logging import getLogger
 from extrafunctools import identity
 import network
-from .serialisation import Message, parse_privmsg, get_nick, to_raw
+from .serialisation import Message, to_raw
 
 
 logger = getLogger(__name__)
@@ -54,8 +54,9 @@ def manage(message, settings, state):
         return Message(command='NICK', arguments=[state.nick])
     elif message.command == '001':
         state.nick = message.arguments[0]
-    elif message.command == 'JOIN' and get_nick(message) == state.nick:
-        state.joined = message.arguments[0]
+    elif message.command == 'JOIN':
+        if getattr(message, 'origin', None) == state.nick:
+            state.joined = message.arguments[0]
 
 
 def get_message(sock, settings, state):
@@ -81,9 +82,10 @@ def get_message(sock, settings, state):
         send_message(sock, response)
         return None
 
-    amend = parse_privmsg if message.command == 'PRIVMSG' else identity
-    return amend(message)
+    if message.command == 'PRIVMSG':
+        return message
 
 
 def send_message(sock, message):
     sock.write(to_raw(message))
+

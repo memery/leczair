@@ -9,6 +9,7 @@ from state import State, from_dict
 
 import irc
 import network
+import behaviour
 
 
 logger = logging.getLogger(__name__)
@@ -38,7 +39,15 @@ def run_bot(state):
                 sock = network.BufferedSocket(state.settings.irc)
                 irc.hello(sock, state.settings.irc, state.irc)
 
-            irc.get_message(sock, state.settings.irc, state.irc)
+            message = irc.get_message(sock, state.settings.irc, state.irc)
+            state.behaviour.nick = state.irc.nick
+
+            if message:
+                response = behaviour.handle(message, state.behaviour)
+                if response:
+                    irc.send_message(sock, response)
+
+
         except (BrokenPipeError, ConnectionResetError) as e:
             socket = None
             sleep(30)

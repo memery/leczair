@@ -32,36 +32,25 @@ class Message:
             self.arguments = arguments
         else:
             raise ValueError('Message.__init__ given neither raw_message nor command')
+
+    @property
+    def text(self):
+        if self.command == 'PRIVMSG':
+            return self.arguments[1]
+        else:
+            raise AttributeError('message type {} does not have text'.format(self.command))
+
+    @property
+    def recipient(self):
+        if self.command == 'PRIVMSG':
+            return self.arguments[0]
+        else:
+            raise AttributeError('message type {} does not have a recipient'.format(self.command))
+
+    @property
+    def origin(self):
+        return nick_pattern.match(self.user).group(1)
         
-
-def parse_privmsg(message):
-    
-    """
-    A function that takes a simple internal message and
-    augments it with privmsg specific information such
-    as nick, message, recipient and so on.
-
-    """
-
-    if message.command == 'PRIVMSG':
-        message.recipient, message.text = message.arguments
-        message.author = get_nick(message)
-    else:
-        raise TypeError('unsupported argument to parse_privmsg: not a PRIVMSG')
-    return message
-
-
-def get_nick(message):
-
-    """
-    Gets the nick part of the user mask in a message, if applicable.
-    Returns None otherwise.
-
-    """
-
-    m = nick_pattern.match(message.user)
-    return m.group(1) if m else None
-
 
 def to_raw(message):
 
