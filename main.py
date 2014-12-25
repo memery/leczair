@@ -35,7 +35,7 @@ def run_bot(state):
     while True:
         try:
             if not sock:
-                sock = irc.create_socket(state.settings.irc)
+                sock = network.BufferedSocket(state.settings.irc)
                 irc.hello(sock, state.settings.irc, state.irc)
 
             irc.get_message(sock, state.settings.irc, state.irc)
