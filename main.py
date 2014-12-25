@@ -1,7 +1,6 @@
 import json
 import logging
 
-from contextlib import contextmanager
 from time import sleep
 
 from state import State, from_dict
