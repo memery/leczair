@@ -43,7 +43,7 @@ class BufferedSocket:
             byteline, self.buffer = self.buffer.split(b'\r\n', 1)
             read_data = byteline.decode('utf-8')
 
-            logger.debug('Read: %s', read_data)
+            logger.debug('--> %s', read_data)
 
             return read_data
         except ValueError:
@@ -62,7 +62,7 @@ class BufferedSocket:
 
         """
 
-        logger.debug('Wrote: %s', text)
+        logger.debug('<-- %s', text)
 
         self.sock.send(bytes(text + '\n', 'utf-8'))
 
