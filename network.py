@@ -1,71 +1,81 @@
+
+"""
+A buffered SSL agnostic socket module. The read procedure will
+either return a complete received line (without CRLF) or, if
+no such line exists, try to get more data from the backing
+socket and then return None.
+
+"""
+
+
 import socket
 
 from ssl import wrap_socket
 from logging import getLogger
 from contextlib import suppress
-
+from stateobj import State
 
 logger = getLogger(__name__)
 
 
-class BufferedSocket:
+def init(connection):
 
     """
-    A buffered SSL agnostic socket object. The read method will
-    either return a complete received line (without crlf) or, if
-    no such line exists, try to get more data from the backing
-    socket and then return None.
+    Sets up the necessary state information to be able to use the
+    read/write procedures. Returns the state object the other methods
+    expect
 
     """
 
-    def __init__(self, connection):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((connection.host, connection.port))
+    state = State()
+    state.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    state.sock.connect((connection.host, connection.port))
 
-        self.sock.settimeout(1)
+    state.sock.settimeout(1)
 
-        if connection.ssl:
-            self.sock = wrap_socket(self.sock)
+    if connection.ssl:
+        state.sock = wrap_socket(state.sock)
 
-        self.ssl = connection.ssl
-        self.buffer = b''
+    state.ssl = connection.ssl
+    state.buffer = b''
 
-
-    def read(self):
-
-        """
-        Tries to return a line from the buffer. If none exists,
-        it reads in one more to the buffer and returns None.
-
-        """
-
-        try:
-            byteline, self.buffer = self.buffer.split(b'\r\n', 1)
-            read_data = byteline.decode('utf-8')
-
-            logger.debug('--> %s', read_data)
-
-            return read_data
-        except ValueError:
-            more = self.sock.read if self.ssl else self.sock.recv
-            with suppress(socket.timeout):
-                self.buffer += more(4096)
-
-            return None
+    return state
 
 
-    def write(self, text):
+def read(state):
 
-        """
-        Accepts a a string object as text, encodes it as utf-8 and
-        puts it out to the socket.
+    """
+    Tries to return a line from the buffer. If none exists,
+    it reads in one more to the buffer and returns None.
 
-        """
+    """
 
-        logger.debug('<-- %s', text)
+    try:
+        byteline, state.buffer = state.buffer.split(b'\r\n', 1)
+        read_data = byteline.decode('utf-8')
 
-        self.sock.send(bytes(text + '\n', 'utf-8'))
+        logger.debug('--> %s', read_data)
+        return read_data
+    except ValueError:
+        more = state.sock.read if state.ssl else state.sock.recv
+        with suppress(socket.timeout):
+            state.buffer += more(4096)
+
+        return None
 
 
-    def close(self):
-        self.sock.close()
+
+def write(state, text):
+
+    """
+    Accepts a a string object as text, encodes it as utf-8 and
+    puts it out to the socket.
+
+    """
+
+    logger.debug('<-- %s', text)
+    state.sock.send(bytes(text + '\n', 'utf-8'))
+
+
+def close(state):
+    state.sock.close()

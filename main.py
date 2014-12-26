@@ -34,7 +34,7 @@ def main():
         if action == 'restart':
             # Reload all modules (including the core modules)
             leczair.reload_modules()
-            leczair.reload_modules({stateobj, leczair})
+            leczair.reload_modules([stateobj, leczair])
 
 
 if __name__ == '__main__':

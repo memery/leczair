@@ -39,12 +39,12 @@ def reload_modules(modules=frozenset({irc, network, behaviour})):
 
 def run_bot(state):
     try:
-        sock = network.BufferedSocket(state.settings.irc)
-        irc.hello(sock, state.settings.irc, state.irc)
+        state.network = network.init(state.settings.irc)
+        irc.hello(state.network, state.settings.irc, state.irc)
 
         while True:
             try:
-                message = irc.get_message(sock, state.settings.irc, state.irc)
+                message = irc.get_message(state.network, state.settings.irc, state.irc)
                 state.behaviour.nick = state.irc.nick
 
                 if message:
@@ -58,7 +58,7 @@ def run_bot(state):
 
                     response = behaviour.handle(message, state.behaviour)
                     if response:
-                        irc.send_message(sock, response)
+                        irc.send_message(state.network, response)
 
             except (BrokenPipeError, ConnectionResetError,
                     ConnectionAbortedError, ConnectionRefusedError):
@@ -76,7 +76,7 @@ def run_bot(state):
         # maintenance loop, so we just wait a bit and try to reconnect again.
         sleep(30)
     finally:
-        sock.close()
+        network.close(state.network)
         # Clear the IRC connection specific state when the connection as been
         # killed
         state.irc = State()

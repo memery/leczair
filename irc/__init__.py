@@ -68,7 +68,7 @@ def get_message(sock, settings, state):
 
     """
 
-    raw_message = sock.read()
+    raw_message = network.read(sock)
     if not raw_message:
         if settings.channel != state.joined:
             send_message(sock, Message(command='JOIN',
@@ -87,5 +87,5 @@ def get_message(sock, settings, state):
 
 
 def send_message(sock, message):
-    sock.write(to_raw(message))
+    network.write(sock, to_raw(message))
 
