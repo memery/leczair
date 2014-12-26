@@ -61,7 +61,7 @@ def run_bot(state):
 
                     for response in responses:
                         if response:
-                            irc.send_message(sock, response)
+                            irc.send_message(state.network, response)
 
             except (BrokenPipeError, ConnectionResetError,
                     ConnectionAbortedError, ConnectionRefusedError):
