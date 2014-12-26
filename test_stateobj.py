@@ -26,6 +26,15 @@ class StateTest(unittest.TestCase):
         s.field.subfield.value = 3
         self.assertEqual(s.field.subfield.value, 3)
 
+    def test_zero(self):
+        s = State()
+        self.assertFalse(s)
+
+    def test_nonzero(self):
+        s = State()
+        s.field = 3
+        self.assertTrue(s)
+
 
 class ToFromDictTest(unittest.TestCase):
     def test_empty(self):

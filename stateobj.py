@@ -21,6 +21,9 @@ class State(dict):
     def __repr__(self):
         return 'from_dict({})'.format(repr(to_dict(self)))
 
+    def __bool__(self):
+        return bool(to_dict(self))
+
 
 def from_dict(d):
 
