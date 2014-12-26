@@ -56,9 +56,12 @@ def run_bot(state):
                     if message.text == 'restart':
                         return 'restart'
 
-                    response = behaviour.handle(message, state.behaviour)
-                    if response:
-                        irc.send_message(state.network, response)
+                    responses = behaviour.handle(message, state.settings,
+                                                 state.behaviour)
+
+                    for response in responses:
+                        if response:
+                            irc.send_message(sock, response)
 
             except (BrokenPipeError, ConnectionResetError,
                     ConnectionAbortedError, ConnectionRefusedError):
