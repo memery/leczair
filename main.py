@@ -1,55 +1,42 @@
-import json
+
+import importlib
 import logging
-
-from contextlib import contextmanager
-from time import sleep
-
-from state import State, from_dict
-
-import irc
-import network
-import behaviour
+import leczair
+import stateobj
 
 
 logger = logging.getLogger(__name__)
 
 
-def load_settings():
-    with open('settings.json', 'r') as conf:
-        return from_dict(json.load(conf))
-
-
-def run_bot(state):
-    sock = None
+def main():
+    logging.basicConfig(level=logging.DEBUG)
+    state_dict = {}
 
     while True:
-        try:
-            if not sock:
-                sock = network.BufferedSocket(state.settings.irc)
-                irc.hello(sock, state.settings.irc, state.irc)
+        # Base the state on the serialisation of the previous state. By
+        # going through the serialisation we allow reloading of the state
+        # module without accidentally messing something up because the
+        # state object abstraction changed in the reload.
+        # 
+        # Beware though that this (and any other code touching stateobj)
+        # can crash specacularly after a reload if the stateobj code is broken.
+        # Such a crash will cause the bot to die completely. Therefore I
+        # suggest only issuing a restart if you are around to deal with
+        # Problems.
+        state = stateobj.from_dict(state_dict)
+        state.settings = leczair.load_settings()
 
-            message = irc.get_message(sock, state.settings.irc, state.irc)
-            state.behaviour.nick = state.irc.nick
+        action = leczair.run_bot(state)
 
-            if message:
-                response = behaviour.handle(message, state.behaviour)
-                if response:
-                    irc.send_message(sock, response)
+        # Serialise state for next iteration
+        state_dict = stateobj.to_dict(state)
 
-
-        except (BrokenPipeError, ConnectionResetError) as e:
-            socket = None
-            sleep(30)
-        except (ConnectionAbortedError, ConnectionRefusedError) as e:
-            logger.error('Connection refused by the server, quitting...')
-            return
-        except Exception as e:
-            logger.exception(e)
+        if action == 'restart':
+            # Reload all modules (including the core modules)
+            leczair.reload_modules()
+            leczair.reload_modules({stateobj, leczair})
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
-    state = State()
-    state.settings = load_settings()
-    run_bot(state)
+    main()
 

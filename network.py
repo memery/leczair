@@ -65,3 +65,7 @@ class BufferedSocket:
         logger.debug('Wrote: %s', text)
 
         self.sock.send(bytes(text + '\n', 'utf-8'))
+
+
+    def close(self):
+        self.sock.close()

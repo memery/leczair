@@ -26,6 +26,10 @@ class State:
         super(State, self).__getattribute__('__dict_repr__')[name] = value
 
 
+    def __repr__(self):
+        return 'from_dict({})'.format(repr(to_dict(self)))
+
+
 
 # from_dict and to_dict should satisfy the property
 #     to_dict(from_dict(d)) == d
