@@ -31,10 +31,10 @@ def run_bot(state):
             state.behaviour.nick = state.irc.nick
 
             if message:
-                responses = behaviour.handle(message, state.behaviour,
-                                            state.settings)
-                if responses:
-                    for response in responses:
+                responses = behaviour.handle(message, state.settings,
+                                             state.behaviour)
+                for response in responses:
+                    if response:
                         irc.send_message(sock, response)
 
 

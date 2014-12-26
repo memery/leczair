@@ -13,13 +13,14 @@ def response(recipient, text):
     return Message(command='PRIVMSG', arguments=[recipient, text])
 
 
-def run_plugins(message, plugins):
+def run_plugins(message, plugins, state):
     logger.debug('Run plugins')
-    return (reload(import_module('plugins.' + plugin)).run(message)
+    return (reload(import_module('plugins.' + plugin)) \
+                .run(message, getattr(state, plugin))
             for plugin in plugins)
 
 
-def handle(message, state, settings):
+def handle(message, settings, state):
     try:
         to, text = split_text(message.text)
     except TypeError:
@@ -29,7 +30,7 @@ def handle(message, state, settings):
             yield response(message.recipient, 
                            'hello to you too, {}!'.format(message.origin))
 
-    yield from run_plugins(message, settings.plugins)
+    yield from run_plugins(message, settings.plugins, state.plugins)
 
 
 def split_text(text):
