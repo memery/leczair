@@ -31,9 +31,11 @@ def run_bot(state):
             state.behaviour.nick = state.irc.nick
 
             if message:
-                response = behaviour.handle(message, state.behaviour)
-                if response:
-                    irc.send_message(sock, response)
+                responses = behaviour.handle(message, state.behaviour,
+                                            state.settings)
+                if responses:
+                    for response in responses:
+                        irc.send_message(sock, response)
 
 
         except (BrokenPipeError, ConnectionResetError) as e:
