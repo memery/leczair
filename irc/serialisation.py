@@ -23,11 +23,13 @@ class Message:
 
     def __init__(self, raw_message=None, command=None, arguments=None):
         if raw_message:
-            self.user, self.command, args, last_arg = \
-                basic_parse(raw_message)
+            self.user, self.command, args, last_arg = basic_parse(raw_message)
         
             self.arguments = args + [last_arg]
         elif command:
+            for section in arguments + [command]:
+                if any(map(lambda s: ord(s) < 32, section)):
+                    raise ValueError('The message contains ASCII control characters: {}'.format(repr(section)))
             self.command = command
             self.arguments = arguments
         else:
