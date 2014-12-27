@@ -14,10 +14,6 @@ import behaviour
 import extrafunctools
 
 
-NETWORK_EXCEPTIONS = (BrokenPipeError, ConnectionResetError,
-                      ConnectionAbortedError, ConnectionRefusedError)
-
-
 logger = logging.getLogger(__name__)
 
 
