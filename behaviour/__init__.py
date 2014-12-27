@@ -19,7 +19,7 @@ def run_plugins(message, command_prefix, plugins, state):
             message,
             command_prefix,
             getattr(state, plugin)
-        )
+        ) or () # default to empty iterable
         for plugin in plugins
     )
 
