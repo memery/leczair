@@ -19,10 +19,7 @@ class State(dict):
         self[name] = value
 
     def __repr__(self):
-        return 'from_dict({})'.format(repr(to_dict(self)))
-
-    def __bool__(self):
-        return bool(to_dict(self))
+        return 'from_dict({})'.format(to_dict(self))
 
 
 def from_dict(d):
