@@ -5,7 +5,10 @@
     "ssl": false,
     "nick": "leczair",
     "channel": "#channel"
-  }
+  },
+  "plugins": [
+    "test"
+  ]
 }
 
 
