@@ -55,6 +55,12 @@ def run_bot(state):
                     if is_admin(state.settings, message.user):
                         if message.text == 'reconfigure':
                             state.settings = load_settings()
+
+                            old = state.settings
+                            msgs = irc.settings_changed(old.irc,
+                                state.settings.irc)
+                            for msg in msgs:
+                                irc.send_message(state.network, msg)
                         if message.text == 'reload':
                             reload_modules()
                             continue

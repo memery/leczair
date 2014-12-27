@@ -44,26 +44,23 @@ class StateTest(unittest.TestCase):
         s.field = 3
         self.assertTrue('field' in s)
 
-
-class ToFromDictTest(unittest.TestCase):
-    def test_empty(self):
+    def test_to_from_empty(self):
         d = {}
         self.assertEqual(d, dict(State.from_dict(d)))
 
-    def test_singleton(self):
+    def test_to_from_singleton(self):
         d = {'a': 1}
         self.assertEqual(d, dict(State.from_dict(d)))
 
-    def test_many(self):
+    def test_to_from_many(self):
         d = dict(enumerate('hello world what a beautiful day'.split()))
         self.assertEqual(d, dict(State.from_dict(d)))
 
-    def test_lists(self):
+    def test_to_from_lists(self):
         d = dict(enumerate([[1, 2, 3], [4, 5, 6], [7, 8, 9]]))
         self.assertEqual(d, dict(State.from_dict(d)))
 
-    def test_nested(self):
+    def test_to_from_nested(self):
         d = {'a': {'b': -1784}, 'c': {'d': 51397, 'e': {'f': 42}}}
         self.assertEqual(d, dict(State.from_dict(d)))
-
 

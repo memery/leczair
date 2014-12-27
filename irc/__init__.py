@@ -9,6 +9,16 @@ from .serialisation import from_raw, to_raw
 logger = getLogger(__name__)
 
 
+def settings_changed(old_settings, new_settings):
+    
+    """
+    What do we need to take care of when settings are reloaded?
+
+    """
+
+    yield Message.nick(new_settings.nick)
+
+
 def hello(sock, settings, state):
     
     """
