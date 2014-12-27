@@ -37,7 +37,7 @@ def manage(message, settings, state):
     """
 
     if message.command == 'PING':
-        return Message.pong(message.arguments)
+        return Message.pong(*message.arguments)
     elif message.command == '403':
         # Channel doesn't exist, stop trying to join
         settings.channel = None

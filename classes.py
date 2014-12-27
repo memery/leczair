@@ -65,7 +65,7 @@ class Message:
 
     def __init__(self, command, arguments=None):
         arguments = list(arguments) if arguments else []
-        for section in list(arguments) + [command]:
+        for section in arguments + [command]:
             if any(map(lambda s: ord(s) < 32, section)):
                 raise ValueError('The message contains ASCII control characters:: {}'.format(repr(section)))
         self.command = command
