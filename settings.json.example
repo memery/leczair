@@ -6,6 +6,9 @@
     "nick": "leczair",
     "channel": "#channel"
   },
+  "behaviour": {
+    "command_prefix": "@"
+  },
   "plugins": [
     "test"
   ],
