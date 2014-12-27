@@ -1,10 +1,10 @@
 from classes import Message
+from behaviour import framework
 
-
-def run(message, state):
-    if message.text == '.test':
-        if 'called' in state:
-            return Message.privmsg(message.recipient, 'You have already tested')
-        else:
-            state.called = True
-            return Message.privmsg(message.recipient, 'Testing first time!')
+@framework.command('test')
+def run(message, arguments, state):
+    if 'called' in state:
+        yield Message.privmsg(message.recipient, 'You have already tested')
+    else:
+        state.called = True
+        yield Message.privmsg(message.recipient, 'Testing first time!')

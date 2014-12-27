@@ -2,6 +2,7 @@ import re
 import logging
 
 from importlib import import_module, reload
+from itertools import chain
 
 from classes import Message
 
@@ -9,11 +10,12 @@ from classes import Message
 logger = logging.getLogger(__name__)
 
 
-def run_plugins(message, plugins, state):
+def run_plugins(message, command_prefix, plugins, state):
     logger.debug('Run plugins')
-    return (reload(import_module('plugins.' + plugin)) \
-                .run(message, getattr(state, plugin))
-            for plugin in plugins)
+    return chain.from_iterable(reload(import_module('plugins.' + plugin)) \
+                                   .run(message, command_prefix,
+                                        getattr(state, plugin))
+                               for plugin in plugins)
 
 
 def handle(message, settings, state):
@@ -26,7 +28,8 @@ def handle(message, settings, state):
             yield Message.privmsg(message.recipient, 
                 'hello to you too, {}!'.format(message.origin))
 
-    yield from run_plugins(message, settings.plugins, state.plugins)
+    yield from run_plugins(message, settings.behaviour.command_prefix,
+                           settings.plugins, state.plugins)
 
 
 def split_text(text):

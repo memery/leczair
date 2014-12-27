@@ -2,7 +2,7 @@ from classes import Message
 from extrafunctools import modattr, succ
 
 
-def run(message, state):
+def run(message, command_prefix, state):
     if message.text.endswith('++'):
         thing = message.text.rstrip('+')
         if thing in state:
@@ -11,4 +11,4 @@ def run(message, state):
             setattr(state, thing, 1)
 
         response = 'The value of {} is now {}'.format(thing, getattr(state, thing))
-        return Message.privmsg(message.recipient, response)
+        yield Message.privmsg(message.recipient, response)
