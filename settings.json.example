@@ -8,6 +8,9 @@
   },
   "plugins": [
     "test"
+  ],
+  "admins": [
+    "nick!~user@example.com"
   ]
 }
 

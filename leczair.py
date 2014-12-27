@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 
 import importlib
 from contextlib import contextmanager
@@ -51,11 +52,13 @@ def run_bot(state):
                 if message:
                     # TODO: Temporary until we know more about how admin
                     # commands are going to work
-                    if message.text == 'reload':
-                        reload_modules()
-                        continue
-                    if message.text == 'restart':
-                        return 'restart'
+                    if any(map(lambda a: re.fullmatch(a, message.user),
+                               state.settings.admins)):
+                        if message.text == 'reload':
+                            reload_modules()
+                            continue
+                        if message.text == 'restart':
+                            return 'restart'
 
                     responses = behaviour.handle(message, state.settings,
                                                  state.behaviour)
