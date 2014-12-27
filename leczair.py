@@ -6,7 +6,7 @@ import importlib
 from contextlib import contextmanager
 from time import sleep
 
-from stateobj import State, from_dict
+from classes import State
 
 import irc
 import network
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 def load_settings():
     with open('settings.json', 'r') as conf:
-        return from_dict(json.load(conf))
+        return State.from_dict(json.load(conf))
 
 
 def reload_modules(modules=frozenset({irc, network, behaviour, extrafunctools})):

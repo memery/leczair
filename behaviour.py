@@ -3,7 +3,7 @@ import logging
 
 from importlib import import_module, reload
 
-from irc import privmsg
+from classes import Message
 
 
 logger = logging.getLogger(__name__)
@@ -23,8 +23,8 @@ def handle(message, settings, state):
         pass
     else:
         if to == state.nick and text == 'hello':
-            yield privmsg(message.recipient, 
-                           'hello to you too, {}!'.format(message.origin))
+            yield Message.privmsg(message.recipient, 
+                'hello to you too, {}!'.format(message.origin))
 
     yield from run_plugins(message, settings.plugins, state.plugins)
 

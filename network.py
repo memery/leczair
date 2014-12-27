@@ -13,7 +13,7 @@ import socket
 from ssl import wrap_socket
 from logging import getLogger
 from contextlib import suppress
-from stateobj import State
+from classes import State
 
 logger = getLogger(__name__)
 

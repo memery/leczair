@@ -1,5 +1,6 @@
 
 import re
+from classes import Message
 
 
 user_pattern = re.compile(r':([^ ]+) ')
@@ -9,56 +10,25 @@ last_arg_pattern = re.compile(r' :(.*)')
 nick_pattern = re.compile(r'~?([^!]+)!')
 
 
-
-class Message:
+def from_raw(raw_message):
 
     """
-    An internal message data structure, with fields such
-    as msg.user, msg.command and so on.
-
-    The constructor takes either a raw IRC network message
-    or a command (with optional arguments.)
+    Deserialises an inbound message, returning a Message object.
 
     """
 
-    def __init__(self, raw_message=None, command=None, arguments=None):
-        if raw_message:
-            self.user, self.command, args, last_arg = basic_parse(raw_message)
-        
-            self.arguments = args + [last_arg]
-        elif command:
-            for section in arguments + [command]:
-                if any(map(lambda s: ord(s) < 32, section)):
-                    raise ValueError('The message contains ASCII control characters: {}'.format(repr(section)))
-            self.command = command
-            self.arguments = arguments
-        else:
-            raise ValueError('Message.__init__ given neither raw_message nor command')
+    user, command, args, last_arg = basic_parse(raw_message)
+    if last_arg:
+        args.append(last_arg)
+    message = Message(command, arguments=args)
+    message.user = user
+    return message
 
-    @property
-    def text(self):
-        if self.command == 'PRIVMSG':
-            return self.arguments[1]
-        else:
-            raise AttributeError('message type {} does not have text'.format(self.command))
-
-    @property
-    def recipient(self):
-        if self.command == 'PRIVMSG':
-            return self.arguments[0]
-        else:
-            raise AttributeError('message type {} does not have a recipient'.format(self.command))
-
-    @property
-    def origin(self):
-        return nick_pattern.match(self.user).group(1)
-        
 
 def to_raw(message):
 
     """
-    Serialises an outbound message to a string the server would like
-    to have.
+    Serialises an outbound message to a string the server would like to have.
     
     """
 
@@ -69,8 +39,7 @@ def to_raw(message):
 def basic_parse(raw_message):
 
     """
-    A generator that yields components from a raw IRC
-    network message
+    A generator that yields components from a raw IRC network message.
 
     """
 

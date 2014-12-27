@@ -1,5 +1,5 @@
 import unittest
-from stateobj import State, from_dict, to_dict
+from classes import State
 
 
 class StateTest(unittest.TestCase):
@@ -48,22 +48,22 @@ class StateTest(unittest.TestCase):
 class ToFromDictTest(unittest.TestCase):
     def test_empty(self):
         d = {}
-        self.assertEqual(d, to_dict(from_dict(d)))
+        self.assertEqual(d, dict(State.from_dict(d)))
 
     def test_singleton(self):
         d = {'a': 1}
-        self.assertEqual(d, to_dict(from_dict(d)))
+        self.assertEqual(d, dict(State.from_dict(d)))
 
     def test_many(self):
         d = dict(enumerate('hello world what a beautiful day'.split()))
-        self.assertEqual(d, to_dict(from_dict(d)))
+        self.assertEqual(d, dict(State.from_dict(d)))
 
     def test_lists(self):
         d = dict(enumerate([[1, 2, 3], [4, 5, 6], [7, 8, 9]]))
-        self.assertEqual(d, to_dict(from_dict(d)))
+        self.assertEqual(d, dict(State.from_dict(d)))
 
     def test_nested(self):
         d = {'a': {'b': -1784}, 'c': {'d': 51397, 'e': {'f': 42}}}
-        self.assertEqual(d, to_dict(from_dict(d)))
+        self.assertEqual(d, dict(State.from_dict(d)))
 
 
