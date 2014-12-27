@@ -39,6 +39,10 @@ def reload_modules(modules=frozenset({irc, network, behaviour, extrafunctools}))
     logger.info('Reloaded {}'.format(', '.join(reloaded)))
 
 
+def is_admin(settings, user):
+    return any(re.fullmatch(admin, user) for admin in settings.admins)
+
+
 def run_bot(state):
     try:
         state.network = network.init(state.settings.irc)
@@ -52,8 +56,7 @@ def run_bot(state):
                 if message:
                     # TODO: Temporary until we know more about how admin
                     # commands are going to work
-                    if any(map(lambda a: re.fullmatch(a, message.user),
-                               state.settings.admins)):
+                    if is_admin(state.settings, message.user):
                         if message.text == 'reload':
                             reload_modules()
                             continue
