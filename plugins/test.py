@@ -3,7 +3,7 @@ from irc import Message
 
 def run(message, state):
     if message.text == '.test':
-        if state.called:
+        if 'called' in state:
             return Message(command='PRIVMSG',
                            arguments=[message.recipient,
                                       'You have already tested'])
