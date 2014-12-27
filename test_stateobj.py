@@ -35,6 +35,15 @@ class StateTest(unittest.TestCase):
         s.field = 3
         self.assertTrue(s)
 
+    def test_not_contains(self):
+        s = State()
+        self.assertFalse('field' in s)
+
+    def test_contains(self):
+        s = State()
+        s.field = 3
+        self.assertTrue('field' in s)
+
 
 class ToFromDictTest(unittest.TestCase):
     def test_empty(self):
