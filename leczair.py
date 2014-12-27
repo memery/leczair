@@ -10,6 +10,7 @@ from stateobj import State, from_dict
 import irc
 import network
 import behaviour
+import extrafunctools
 
 
 NETWORK_EXCEPTIONS = (BrokenPipeError, ConnectionResetError,
@@ -24,7 +25,7 @@ def load_settings():
         return from_dict(json.load(conf))
 
 
-def reload_modules(modules=frozenset({irc, network, behaviour})):
+def reload_modules(modules=frozenset({irc, network, behaviour, extrafunctools})):
     reloaded = set()
     for m in modules:
         try:
