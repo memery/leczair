@@ -2,6 +2,7 @@ import re
 import logging
 
 from importlib import import_module, reload
+from itertools import chain
 
 from irc import Message
 
@@ -15,9 +16,9 @@ def response(recipient, text):
 
 def run_plugins(message, plugins, state):
     logger.debug('Run plugins')
-    return (reload(import_module('plugins.' + plugin)) \
-                .run(message, getattr(state, plugin))
-            for plugin in plugins)
+    return chain(*(reload(import_module('plugins.' + plugin)) \
+                       .run(message, getattr(state, plugin))
+                   for plugin in plugins))
 
 
 def handle(message, settings, state):
@@ -27,7 +28,7 @@ def handle(message, settings, state):
         pass
     else:
         if to == state.nick and text == 'hello':
-            yield response(message.recipient, 
+            yield response(message.recipient,
                            'hello to you too, {}!'.format(message.origin))
 
     yield from run_plugins(message, settings.plugins, state.plugins)
