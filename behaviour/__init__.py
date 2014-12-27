@@ -12,10 +12,16 @@ logger = logging.getLogger(__name__)
 
 def run_plugins(message, command_prefix, plugins, state):
     logger.debug('Run plugins')
-    return chain.from_iterable(reload(import_module('plugins.' + plugin)) \
-                                   .run(message, command_prefix,
-                                        getattr(state, plugin))
-                               for plugin in plugins)
+    return chain.from_iterable(
+        reload(
+            import_module('plugins.' + plugin)
+        ).run(
+            message,
+            command_prefix,
+            getattr(state, plugin)
+        )
+        for plugin in plugins
+    )
 
 
 def handle(message, settings, state):
