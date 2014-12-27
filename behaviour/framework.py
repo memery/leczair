@@ -2,6 +2,32 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
+from functools import wraps
+
+
+def command(name):
+
+    """
+    Use this for making the run-function in any plugin into a command.
+
+    Then define run like:
+      @framework.command('mycommand')
+      run(message, arguments, state)
+
+    """
+
+    def command_decorator(run):
+        @wraps(run)
+        def wrapper(message, command_prefix, state):
+            words = message.text.split()
+            command, arguments = words[0], words[1:]
+            if command == command_prefix + name:
+                return run(message, arguments, state)
+
+        return wrapper
+
+    return command_decorator
+
 
 def url_request(url):
     req = Request(url)
@@ -10,6 +36,7 @@ def url_request(url):
 
 
 def read_url(url, args='', quote_=True, content_whitelist=[]):
+
     """
     Return the data (presumably text) from a url and decode it to utf-8 using
     the page's preferred encoding (if found).
@@ -18,8 +45,8 @@ def read_url(url, args='', quote_=True, content_whitelist=[]):
     quote_ -- if True, will mean that args will be appended as quote(args)
     content_whitelist -- a list of MIME types which the page's type has to be
                          one of (empty list means no restriction)
-    """
 
+    """
 
     # Convert non-ascii chars to %xx-format
     safe = '/:;.,?+-=@#&' # These will not be converted

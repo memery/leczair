@@ -7,7 +7,7 @@ from irc import Message
 from behaviour import framework
 
 
-def run(message, state):
+def run(message, command_prefix, state):
     spotify_url_re = re.compile(r'spotify(:\S+)+?')
 
     titles = set(spotify_title(m.group(0))

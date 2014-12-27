@@ -2,7 +2,7 @@ from irc import Message
 from extrafunctools import modattr, succ
 
 
-def run(message, state):
+def run(message, command_prefix, state):
     if message.text.endswith('++'):
         thing = message.text.rstrip('+')
         if thing in state:
@@ -10,7 +10,7 @@ def run(message, state):
         else:
             setattr(state, thing, 1)
 
-        return Message(command='PRIVMSG',
-                       arguments=[message.recipient,
-                                  '{} = {}'.format(thing,
-                                                   getattr(state, thing))])
+        yield Message(command='PRIVMSG',
+                      arguments=[message.recipient,
+                                 '{} = {}'.format(thing,
+                                                  getattr(state, thing))])
