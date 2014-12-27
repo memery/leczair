@@ -39,6 +39,11 @@ def reload_modules(modules=frozenset({irc, network, behaviour, extrafunctools}))
     logger.info('Reloaded {}'.format(', '.join(reloaded)))
 
 
+def update_settings(old, new):
+    raise Exception('stub')
+    pass
+
+
 def is_admin(settings, user):
     return any(re.fullmatch(admin, user) for admin in settings.admins)
 
@@ -57,6 +62,8 @@ def run_bot(state):
                     # TODO: Temporary until we know more about how admin
                     # commands are going to work
                     if is_admin(state.settings, message.user):
+                        if message.text == 'reconfigure':
+                            update_settings(state.settings, load_settings())
                         if message.text == 'reload':
                             reload_modules()
                             continue
