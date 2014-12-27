@@ -3,6 +3,7 @@ from logging import getLogger
 from extrafunctools import identity
 import network
 from .serialisation import Message, to_raw
+from .shortcuts import *
 
 
 logger = getLogger(__name__)
@@ -16,10 +17,8 @@ def hello(sock, settings, state):
 
     """
 
-    send_message(sock, Message(command='NICK', arguments=[settings.nick]))
-
-    user_arguments = [settings.nick, '0', '*', 'Bot {}'.format(settings.nick)]
-    send_message(sock, Message(command='USER', arguments=user_arguments))
+    send_message(sock, nick(settings.nick))
+    send_message(sock, user(settings.nick, 'Bot {}'.format(settings.nick)))
 
     state.nick = settings.nick
     state.joined = ''
@@ -37,7 +36,7 @@ def manage(message, settings, state):
     """
 
     if message.command == 'PING':
-        return Message(command='PONG', arguments=message.arguments)
+        return pong(message.arguments)
     elif message.command == '403':
         # Channel doesn't exist, stop trying to join
         settings.channel = None
@@ -51,7 +50,7 @@ def manage(message, settings, state):
         logger.warning('Nick %s is already in use', state.nick)
 
         state.nick = generate_nick(settings.nick)
-        return Message(command='NICK', arguments=[state.nick])
+        return nick(state.nick)
     elif message.command == '001':
         state.nick = message.arguments[0]
     elif message.command == 'JOIN':
@@ -69,21 +68,23 @@ def get_message(sock, settings, state):
     """
 
     raw_message = network.read(sock)
-    if not raw_message:
-        if settings.channel != state.joined:
-            send_message(sock, Message(command='JOIN',
-                                       arguments=[settings.channel]))
+
+    if raw_message:
+        message = Message(raw_message=raw_message)
+        response = manage(message, settings, state)
+        if response:
+            send_message(sock, response)
+        elif message.command == 'PRIVMSG':
+            return message
+
         return None
 
-    message = Message(raw_message=raw_message)
-
-    response = manage(message, settings, state)
-    if response:
-        send_message(sock, response)
+    if settings.channel != state.joined:
+        if state.joined:
+            send_message(sock, part(state.joined))
+        send_message(sock, join(settings.channel))
         return None
 
-    if message.command == 'PRIVMSG':
-        return message
 
 
 def send_message(sock, message):

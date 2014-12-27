@@ -6,7 +6,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
-from irc import Message
+import irc
 
 spotify_url_re = re.compile(r'spotify(:\S+)+?')
 
@@ -19,8 +19,7 @@ def run(message, state):
             titles.append('Spotify: ' + title)
 
     if titles:
-        return Message(command='PRIVMSG',
-                       arguments=[message.recipient, ', '.join(titles)])
+        return irc.privmsg(message.recipient, ', '.join(titles))
 
 
 def spotify_title(uri):

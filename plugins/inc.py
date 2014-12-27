@@ -1,4 +1,4 @@
-from irc import Message
+from irc import privmsg
 from extrafunctools import modattr, succ
 
 
@@ -10,7 +10,5 @@ def run(message, state):
         else:
             setattr(state, thing, 1)
 
-        return Message(command='PRIVMSG',
-                       arguments=[message.recipient,
-                                  '{} = {}'.format(thing,
-                                                   getattr(state, thing))])
+        response = 'The value of {} is now {}'.format(thing, getattr(state, thing))
+        return privmsg(message.recipient, response)
