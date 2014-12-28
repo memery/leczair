@@ -7,7 +7,8 @@ from irc import Message
 from behaviour import framework
 
 
-def run(message, command_prefix, state):
+@framework.passive
+def run(message, state):
     url_re = re.compile(r'https?://\S+')
 
     yield from (Message(command='PRIVMSG',

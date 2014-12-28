@@ -1,8 +1,10 @@
 from classes import Message
 from extrafunctools import modattr, succ
+from behaviour import framework
 
 
-def run(message, command_prefix, state):
+@framework.passive
+def run(message, state):
     if message.text.endswith('++'):
         thing = message.text.rstrip('+')
         if thing in state:

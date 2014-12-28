@@ -5,29 +5,91 @@ from urllib.request import Request, urlopen
 from functools import wraps
 
 
-def command(name):
+def passive(run):
 
     """
-    Use this for making the run-function in any plugin into a command.
+    Makes the entry-point in a plugin passive. Basically it only gets rid
+    of the command_prefix-argument.
 
-    Then define run like:
-      @framework.command('mycommand')
-      run(message, arguments, state)
+    Usage:
+      @framework.passive
+      def run(message, state):
+          # stuff
 
     """
 
-    def command_decorator(run):
+    @wraps(run)
+    def wrapper(message, command_prefix, state):
+        return run(message, state)
+
+    return wrapper
+
+
+def passive_with_command(command_fn):
+
+    """
+    Makes the entry point in a plugin passive, but yields specified
+    command function first.
+
+    Note that the command function should be defined just like any command.
+
+    Usage:
+      @framework.passive_with_command(mycommand)
+      def run(message, state):
+          # stuff
+
+    """
+
+    def decorator(run):
         @wraps(run)
         def wrapper(message, command_prefix, state):
-            words = message.text.split()
-            command, arguments = words[0], words[1:]
-            if command == command_prefix + name:
-                return run(message, arguments, state)
+            yield from command_fn(message, command_prefix, state)
+            yield from run(message, state)
 
         return wrapper
 
-    return command_decorator
+    return decorator
 
+
+def command(name, split_arguments=True):
+
+    """
+    Makes a function into a command that can be used in a plugin. For
+    example the entry-point.
+
+    `split_arguments` specifies whether arguments should be represented
+    like a string or splitted into a list.
+
+    Usage:
+      @framework.command('mycommand')
+      def run(message, arguments, state):
+          # stuff
+
+    """
+
+    def decorator(run):
+        @wraps(run)
+        def wrapper(message, command_prefix, state):
+            try:
+                command, arguments = message.text.split(maxsplit=1)
+            except ValueError:
+                command = message.text
+                arguments = ''
+
+            if split_arguments:
+                arguments = arguments.split()
+
+            if command == command_prefix + name:
+                return run(message, arguments, state)
+            else:
+                return () # default to empty iterable
+
+        return wrapper
+
+    return decorator
+
+
+# TODO: This is straight from memery-legacy. It should be overlooked.
 
 def url_request(url):
     req = Request(url)
