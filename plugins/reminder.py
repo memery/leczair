@@ -77,7 +77,7 @@ def run(message, state):
             logger.debug("Didn't remind anybody")
             return
         else:
-            if when >= datetime.now():
+            if when <= datetime.now():
                 yield Message.privmsg(message.recipient,
                                       '{}: Reminder: {}'.format(who, what))
             else:
