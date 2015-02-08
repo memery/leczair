@@ -1,92 +1,105 @@
+from functools import partial, reduce
+from collections import namedtuple
 
-import copy
-import functools
+
+def empty():
+    """Returns an empty frozenstate object. Probably not very useful for normal
+    applications."""
+    return namedtuple('FS', [])()
 
 
-class State:
-    def __init__(self, *states):
-        self.__path__ = ''
-        self.__store__ = {}
+def single(path, value):
+    """
+    Creates a frozenstate object out of a single value, such that if
 
-        # TODO: Check somewhere here that we are retaning the biggest possible
-        # path intact (and creating the minimal possible state object)
-        ds = [type(state).to_dict(state) for state in states]
-        if ds:
-            combined = functools.reduce(lambda d, u: dict(d, **u), ds, {})
-            new = type(self).from_dict(combined)
-            self.__store__ = new.__store__
+        fs_obj = single('foo.bar.baz', 17)
 
-    @classmethod
-    def get(cls, state, path):
-        *sections, name = path.split('.')
+    then
+
+        fs_obj.foo.bar.baz = 17
+
+    """
+
+    try:
+        this, rest = path.split('.', 1)
+        next = partial(single, rest)
+    except ValueError:
+        this = path
+        next = lambda x: x
+
+    return namedtuple('FS', [this])(next(value))
+
+
+def append(fsa, fsb):
+    """
+    Takes two frozenstate objects and combines them into one. Where their
+    values differ, the latter one will be used. For example, if
+
+        a = frozenstate.single('foo.bar', 3)
+        b = frozenstate.single('foo.baz', 5)
+        c = frozenstate.append(a, b)
+
+    then
+
+        c.foo.bar = 3
+        c.foo.baz = 5
+
+    If we continue with
+
+        d = frozenstate.single('foo.baz', 7)
+        e = frozenstate.append(c, d)
+
+    then
+
+        e.foo.bar == 3
+        e.foo.baz == 7
+
+    From this you might realise that we can fake mutable state by doing
+
+        fs = frozenstate.append(fs, frozenstate.single(path, v))
+
+    which will overwrite the fs object with the result you get if you take the
+    fs object and change one of its members to a new value. Doing this might
+    not be a good idea.
+
+    My recommendation is to aggregate changes to the state (in, say, a list or
+    a generator) and then apply them all atomically. This will make your state
+    easier to reason about since at any point in your program it will be either
+    in state A or state B, never will it be halfway between the two states.
+    Aggregating changes before applying them might also be useful for logging
+    and transactional purposes – you can keep a record of all changes applied
+    to the state, and roll them back if you need to.
+
+    """
+
+    keys = set(fsa._fields) | set(fsb._fields)
+
+    d = {}
+    for k in keys:
+        # If the key isn't in one of them...
+        if k not in fsa._fields:
+            d[k] = getattr(fsb, k)
+            continue
+
+        # ...it's guaranteed to be in the other
+        if k not in fsb._fields:
+            d[k] = getattr(fsa, k)
+            continue
+
+        # At this point both are guaranteed to have the key
+        va, vb = getattr(fsa, k), getattr(fsb, k)
+
+        # If the keys exist in both FSs, we try to join their values together
         try:
-            target = state
-            for node in sections:
-                target = target.__store__[node]
-            return target.__store__[name]
-        except KeyError:
-            new = cls()
-            new.__path__ = state.__path__ + '.' + path
-            return new
+            d[k] = append(va, vb)
+        except AttributeError:
+            # ...but if we can't do that, we just overwrite the old value
+            d[k] = vb
 
-    @classmethod
-    def set(cls, state, path, value):
-        *sections, name = path.split('.')
+    return namedtuple('FS', keys)(**d)
 
-        new = copy.copy(state)
-        target = new
-        for node in sections:
-            print(node)
-            try:
-                target.__store__[node] = copy.copy(target.__store__[node])
-            except KeyError:
-                target.__store__[node] = cls()
-            target = target.__store__[node]
-        target.__store__[name] = value
 
-        return new
-
-    @classmethod
-    def to_dict(cls, state, include_path=True):
-        d = { k: cls.to_dict(v, include_path=False)
-              if isinstance(v, cls) else v
-              for k, v in state }
-
-        if include_path:
-            for node in reversed(state.__path__.split('.')):
-                d = {node: d}
-
-        return d
-
-    @classmethod
-    def from_dict(cls, d, path=''):
-        state = cls()
-        state.__path__ = path
-        for k, v in d.items():
-            if isinstance(v, cls):
-                v = cls.from_dict(v.__store__, path=path+'.'+k)
-            if isinstance(v, dict):
-                v = cls.from_dict(v, path=path+'.'+k)
-            state.__store__[k] = v
-
-        return state
-
-    def __copy__(self):
-        new = type(self)()
-        new.__path__ = self.__path__
-        new.__store__ = dict(self.__store__) 
-        return new
-
-    def __iter__(self):
-        return zip(self.__store__.keys(), self.__store__.values())
-
-    def __contains__(self, key):
-        return key in self.__store__.keys()
-
-    def __repr__(self):
-        return '{}.from_dict({}{})'.format(
-            type(self).__name__,
-            type(self).to_dict(self, include_path=False),
-            ', path=' + repr(self.__path__) if self.__path__ else ''
-        )
-
+def concat(*fss):
+    """Convenience function to join a bunch of states simultaneously instead of
+    two at a time."""
+    return reduce(append, fss, empty())
