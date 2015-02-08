@@ -1,4 +1,4 @@
-from classes import Message
+from message import Message
 from extrafunctools import modattr, succ
 
 

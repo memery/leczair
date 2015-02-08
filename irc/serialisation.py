@@ -1,6 +1,6 @@
 
 import re
-from classes import Message
+from message import Message
 
 
 user_pattern = re.compile(r':([^ ]+) ')

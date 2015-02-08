@@ -13,7 +13,7 @@ import socket
 from ssl import wrap_socket
 from logging import getLogger
 from contextlib import suppress
-from classes import State
+import frozenstate
 
 logger = getLogger(__name__)
 
@@ -27,19 +27,18 @@ def init(connection):
 
     """
 
-    state = State()
-    state.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    state.sock.connect((connection.host, connection.port))
-
-    state.sock.settimeout(1)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((connection.host, connection.port))
+    sock.settimeout(1)
 
     if connection.ssl:
-        state.sock = wrap_socket(state.sock)
+        sock = wrap_socket(sock)
 
-    state.ssl = connection.ssl
-    state.buffer = b''
-
-    return state
+    return frozenstate.from_dict({
+        'sock': sock,
+        'ssl': connection.ssl,
+        'buffer': b'',
+    })
 
 
 def read(state):
@@ -51,18 +50,18 @@ def read(state):
     """
 
     try:
-        byteline, state.buffer = state.buffer.split(b'\r\n', 1)
+        byteline, new_buffer = state.buffer.split(b'\r\n', 1)
         read_data = byteline.decode('utf-8')
 
         logger.debug('--> %s', read_data)
-        return read_data
     except ValueError:
+        read_data = None
+
         more = state.sock.read if state.ssl else state.sock.recv
         with suppress(socket.timeout):
-            state.buffer += more(4096)
+            new_buffer = state.buffer + more(4096)
 
-        return None
-
+    return read_data, frozenstate.single('buffer', new_buffer)
 
 
 def write(state, text):

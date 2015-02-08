@@ -4,7 +4,7 @@ import logging
 from importlib import import_module, reload
 from itertools import chain
 
-from classes import Message
+from message import Message
 
 
 logger = logging.getLogger(__name__)

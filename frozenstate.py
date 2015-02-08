@@ -2,10 +2,28 @@ from functools import partial, reduce
 from collections import namedtuple
 
 
+def mkfs(fields, *args, **kwargs):
+    """
+    Factory for creating an FS object. An FS object differs from a namedtuple
+    only in that it has a magic __getattr__ which produces empty FS objects if
+    they don't exist yet.
+    
+    """
+
+    class FS(namedtuple('FS', fields)):
+        def __getattr__(self, name):
+            return empty()
+
+        def __contains__(self, name):
+            return name in self._fields
+
+    return FS(*args, **kwargs)
+
+
 def empty():
     """Returns an empty frozenstate object. Probably not very useful for normal
     applications."""
-    return namedtuple('FS', [])()
+    return mkfs([])
 
 
 def single(path, value):
@@ -22,12 +40,12 @@ def single(path, value):
 
     try:
         this, rest = path.split('.', 1)
-        next = partial(single, rest)
+        deeper = partial(single, rest)
     except ValueError:
         this = path
-        next = lambda x: x
+        deeper = lambda x: x
 
-    return namedtuple('FS', [this])(next(value))
+    return mkfs([this], deeper(value))
 
 
 def append(fsa, fsb):
@@ -96,10 +114,34 @@ def append(fsa, fsb):
             # ...but if we can't do that, we just overwrite the old value
             d[k] = vb
 
-    return namedtuple('FS', keys)(**d)
+    return mkfs(keys, **d)
 
 
-def concat(*fss):
+def concat(fss):
     """Convenience function to join a bunch of states simultaneously instead of
     two at a time."""
     return reduce(append, fss, empty())
+
+
+def to_dict(fs):
+    d = {}
+    for k in fs._fields:
+        v = getattr(fs, k)
+        try:
+            d[k] = to_dict(v)
+        except AttributeError:
+            d[k] = v
+    return d
+
+
+def from_dict(d, path=()):
+    def get_changeset(d):
+        for k, v in d.items():
+            try:
+                r = from_dict(v, path=path)
+            except AttributeError:
+                r = v
+
+            yield single('.'.join(path+(k,)), r)
+
+    return concat(get_changeset(d))

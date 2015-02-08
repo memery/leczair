@@ -3,7 +3,7 @@ import xml.etree.ElementTree as ET
 
 from urllib.error import HTTPError, URLError
 
-from classes import Message
+from message import Message
 from behaviour import framework
 
 

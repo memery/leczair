@@ -2,7 +2,8 @@ import random, string
 from logging import getLogger
 from extrafunctools import identity
 import network
-from classes import Message
+from message import Message
+import frozenstate
 from .serialisation import from_raw, to_raw
 
 
@@ -31,8 +32,10 @@ def hello(sock, settings, state):
     send_message(sock, Message.user(settings.nick,
                                     'Bot {}'.format(settings.nick)))
 
-    state.nick = settings.nick
-    state.joined = ''
+    return frozenstate.from_dict({
+        'nick': settings.nick,
+        'joined': '',
+    })
 
 
 def manage(message, settings, state):
@@ -47,10 +50,11 @@ def manage(message, settings, state):
     """
 
     if message.command == 'PING':
-        return Message.pong(*message.arguments)
+        return Message.pong(*message.arguments), frozenstate.empty()
     elif message.command == '403':
         # Channel doesn't exist, stop trying to join
-        settings.channel = None
+        # TODO: fix :( settings.channel = None
+        return None, frozenset.empty()
     elif message.command == '433':
         def generate_nick(nick):
             truncated = nick[:min(len(nick), 6)]
@@ -60,13 +64,15 @@ def manage(message, settings, state):
 
         logger.warning('Nick %s is already in use', state.nick)
 
-        state.nick = generate_nick(settings.nick)
-        return Message.nick(state.nick)
+        new_nick = generate_nick(settings.nick)
+        return Message.nick(new_nick), frozenstate.single('nick', new_nick)
     elif message.command == '001':
-        state.nick = message.arguments[0]
+        return None, frozenstate.single('nick', message.arguments[0])
     elif message.command == 'JOIN':
         if getattr(message, 'origin', None) == state.nick:
-            state.joined = message.arguments[0]
+            return None, frozenstate.single('joined', message.arguments[0])
+    else:
+        return None, frozenstate.empty()
 
 
 def get_message(sock, settings, state):
@@ -82,19 +88,19 @@ def get_message(sock, settings, state):
 
     if raw_message:
         message = from_raw(raw_message)
-        response = manage(message, settings, state)
+        response, new_state = manage(message, settings, state)
         if response:
             send_message(sock, response)
         elif message.command == 'PRIVMSG':
-            return message
+            return message, new_state
 
-        return None
+        return None, new_state
 
     if settings.channel != state.joined:
         if state.joined:
             send_message(sock, Message.part(state.joined))
         send_message(sock, Message.join(settings.channel))
-        return None
+        return None, frozenstate.empty()
 
 
 

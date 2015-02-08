@@ -6,10 +6,11 @@ import importlib
 from contextlib import contextmanager
 from time import sleep
 
-from classes import State
+import frozenstate
 
 import irc
 import network
+import message
 import behaviour
 import extrafunctools
 
@@ -19,10 +20,10 @@ logger = logging.getLogger(__name__)
 
 def load_settings():
     with open('settings.json', 'r') as conf:
-        return State.from_dict(json.load(conf))
+        return frozenstate.from_dict(json.load(conf))
 
 
-def reload_modules(modules=frozenset({irc, network, behaviour, extrafunctools})):
+def reload_modules(modules=frozenset({irc, network, message, behaviour, extrafunctools})):
     reloaded = set()
     for m in modules:
         try:
@@ -41,12 +42,14 @@ def is_admin(settings, user):
 
 def run_bot(state):
     try:
-        state.network = network.init(state.settings.irc)
-        irc.hello(state.network, state.settings.irc, state.irc)
+        connection = network.init(state.settings.irc)
+        # TODO: Fix so this uses the auto state creating thingey
+        state = frozenstate.append(state,
+                irc.hello(connection, state.settings.irc, getattr(state, 'irc', frozenstate.empty())))
 
         while True:
             try:
-                message = irc.get_message(state.network, state.settings.irc, state.irc)
+                message = irc.get_message(connection, state.settings.irc, state.irc)
                 state.behaviour.nick = state.irc.nick
 
                 if message:
@@ -54,13 +57,12 @@ def run_bot(state):
                     # commands are going to work
                     if is_admin(state.settings, message.user):
                         if message.text == 'reconfigure':
-                            state.settings = load_settings()
-
                             old = state.settings
+                            state = frozenstate.append(state, load_settings())
                             msgs = irc.settings_changed(old.irc,
-                                state.settings.irc)
+                                                        state.settings.irc)
                             for msg in msgs:
-                                irc.send_message(state.network, msg)
+                                irc.send_message(connection, msg)
                         if message.text == 'reload':
                             reload_modules()
                             continue
@@ -71,7 +73,7 @@ def run_bot(state):
                                                  state.behaviour)
 
                     for response in filter(bool, responses):
-                        irc.send_message(state.network, response)
+                        irc.send_message(connection, response)
 
             except (BrokenPipeError, ConnectionResetError,
                     ConnectionAbortedError, ConnectionRefusedError):
@@ -89,8 +91,8 @@ def run_bot(state):
         # maintenance loop, so we just wait a bit and try to reconnect again.
         sleep(30)
     finally:
-        network.close(state.network)
+        network.close(active_network)
         # Clear the IRC connection specific state when the connection as been
         # killed
-        state.irc = State()
+        state.irc = frozenstate.empty()
 
